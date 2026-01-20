@@ -317,7 +317,8 @@ class ChronoFrame(chronoFrame):
     def setup(self):
 
         self.serial = serial.Serial(self.getConfig('serial_port'), 1200)
-        self.serial.open()
+        if not self.serial.is_open:
+            self.serial.open()
 
         # bind OnClose method
         self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -418,9 +419,7 @@ class ChronoFrame(chronoFrame):
 
         # on countdown
         if self.countdown <= 0:
-            self.serial.write(b'1')
             self.capture()      # take screenshot and webcam capture
-            self.serial.write(b'0')
             self.countdown = float(self.frequencytext.GetValue()) # reset timer
 
     def fileBrowser(self, message, defaultFile=''):
@@ -473,6 +472,8 @@ class ChronoFrame(chronoFrame):
 
 
     def capture(self, force=False):
+
+        self.serial.write(b'1')
 
         # check if idle if necessary
         if not force and self.getConfig('skip_if_idle'):
@@ -546,6 +547,9 @@ class ChronoFrame(chronoFrame):
             # take webcam shot
             self.saveWebcam(filename)
 
+
+        self.serial.write(b'0')
+        
         return filename
 
     def saveScreenshot(self, filename):
